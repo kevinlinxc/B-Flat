@@ -15,7 +15,6 @@ left = None
 right = None
 current_image = None
 padding = 10
-output_name = "output90.png"
 
 
 def wipe_directory(path):
@@ -103,6 +102,7 @@ def main():
         page.save(f"{os.path.join(temp_path, page_name)}", format="jpeg")
 
     # 3. For each image, find the rows of sheet music
+    first_row = True
     for i in range(num_pages):
         page_name = f"{i} - {file_name}.jpg"
         image_path = os.path.join(temp_path, page_name)
@@ -112,7 +112,8 @@ def main():
         line_contr = line_contrast(img)
         detected_rows = find_rows(line_contr)
 
-        # 4. For each detected row, allow the user to crop it
+        # 4. On the first row ever, get the left and right crop points from the user
+        #   and then crop the rest of the rows to those points
         for row_index, row in enumerate(detected_rows):
             top = 0 if row[0] - padding < 0 else row[0] - padding
             bottom = height if row[1] + padding > height else row[1] + padding
@@ -126,41 +127,47 @@ def main():
             track_left_start = left if left else 0
             track_right_start = right if right else rightmost
 
-            cv2.createTrackbar("left", track_title, track_left_start, rightmost, on_trackbar)
-            cv2.createTrackbar("right", track_title, track_right_start, rightmost, on_trackbar)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-            img[row[0], left:right] = 0
-            img[row[1], left:right] = 0
-            img[row[0]:row[1], left] = 0
-            img[row[0]:row[1], right - 1] = 0
+            if first_row:
+                cv2.createTrackbar("left", track_title, track_left_start, rightmost, on_trackbar)
+                cv2.createTrackbar("right", track_title, track_right_start, rightmost, on_trackbar)
+                cv2.waitKey(0)
+                first_row = False
 
-            print(f"top: {top}, bottom: {bottom}, left: {left}, right: {right} for line {row_index} for page {i}")
+            # print(f"top: {top}, bottom: {bottom}, left: {left}, right: {right} for line {row_index} for page {i}")
             saved_rows.append(img_copy[top:bottom, left:right])
-
-        show = plt.imshow(img, cmap='gray')
-        wm = plt.get_current_fig_manager()
-        wm.window.state('zoomed')
-        plt.show()
     cv2.destroyAllWindows()
-    max_height = 0
+
+    # 5. Combine the list of rows into a single array
+    final_array = combine_rows(saved_rows)
+
+    # 6. Rotate the really long horizontal image to vertical so autoscrolling apps can play it while turned sideways
+    img_rotate_90_clockwise = cv2.rotate(final_array, cv2.ROTATE_90_CLOCKWISE)
+    output_path = os.path.join(os.getcwd(), file_name + "-flattened.png")
+    cv2.imwrite(output_path, img_rotate_90_clockwise)
+    print(f"Saved final result to {output_path}!")
+
+
+def combine_rows(saved_rows):
+    """Combine all the found rows of sheet music into a single array"""
+    max_height = float('-inf')
+
+    # find the max height for the rows, everything else will be padded to this height
     for row in saved_rows:
         height = row.shape[0]
         max_height = max(height, max_height)
-        # cv2.imshow("Results", row)
-        # cv2.waitKey(0)
-    print(f"Max height: {max_height}")
+
+    # make a single vertical column of white pixels to concatenate horizontally to
     final_array = np.ones((max_height, 1)) * 255
+
     for i in range(len(saved_rows)):
+        # pad each row to the max height and then concatenate horizontally
         row_height = saved_rows[i].shape[0]
         height_diff = max_height - row_height
         bot_padding = math.ceil(height_diff / 2)
         top_padding = math.floor(height_diff / 2)
         padded = cv2.copyMakeBorder(saved_rows[i], top_padding, bot_padding, 0, 0, cv2.BORDER_CONSTANT, value=[255])
         final_array = np.hstack([final_array, padded])
-    img_rotate_90_clockwise = cv2.rotate(final_array, cv2.ROTATE_90_CLOCKWISE)
-    cv2.imwrite(output_name, img_rotate_90_clockwise)
-    print(f"Saved rows to {output_name}")
+    return final_array
 
 
 if __name__ == '__main__':

@@ -1,8 +1,12 @@
 # B-Flat
 
+Flattens a sheet music pdf into one really long png so it can be viewed on a phone.
+
+Example input: [Madeon - Shelter.pdf](Madeon%20-%20Shelter.pdf)
+and output: [Madeon - Shelter-flattened.png](Madeon%20-%20Shelter-flattened.png)
+
 Caveat: I wrote all of this code originally in August 2021, and moved it to this repo in 2022.
-The code is not the best quality, and its compounded by the fact that sliders in OpenCV 
-are very finicky and require global variables. 
+I did some refactoring in 2022, but it's still not representative of my best work.
 
 ## Usage
 - Install Python
@@ -10,10 +14,13 @@ are very finicky and require global variables.
 - activate the venv (depends on your OS)
 - pip install -r requirements.txt
 - python main.py
-- Select your sheet music pdf
-- Crop the left and right sides until the black bars and hit any button.
+- Select your sheet music pdf file
+- Crop the left and right sides with the windows that pop up to remove whitespace, clefs, and 
+optionally time signature/key signature
+The left and right cropping amount chosen here will propogate to the rest of the sheet music.
+- A really long image will be output that can be sent to your phone to use with an autoscrolling app.
 
-## Problem
+## Problem statement
 As far as I'm aware, there's no app that lets you easily play 
 from sheet music on a cell phone.
 
