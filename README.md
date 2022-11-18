@@ -4,6 +4,15 @@ Caveat: I wrote all of this code originally in August 2021, and moved it to this
 The code is not the best quality, and its compounded by the fact that sliders in OpenCV 
 are very finicky and require global variables. 
 
+## Usage
+- Install Python
+- python -m venv venv
+- activate the venv (depends on your OS)
+- pip install -r requirements.txt
+- python main.py
+- Select your sheet music pdf
+- Crop the left and right sides until the black bars and hit any button.
+
 ## Problem
 As far as I'm aware, there's no app that lets you easily play 
 from sheet music on a cell phone.
@@ -25,5 +34,3 @@ the scrolling speed during the performance, this makes it pretty hard to read th
 One idea is to encode the scrolling speed as maybe a grayscale 0-255 value at the edge of the sheet music picture,
 but I haven't thought of a satisfying way for a user to generate this without a lot of manual work, and of course
 the scrolling app would need to interpret this encoding too.
-
-## Usage
