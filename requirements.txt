@@ -1,0 +1,5 @@
+easygui
+pdf2image
+opencv-python==4.5.5.62
+Pillow
+matplotlib
